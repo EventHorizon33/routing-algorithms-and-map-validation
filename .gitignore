@@ -1,0 +1,17 @@
+# Maven build output
+target/
+
+# GraphHopper generated graph cache
+graphhopper/graph-cache/
+
+# Large OSM map data
+data/*.osm.pbf
+
+# GraphHopper binary
+tools/*.jar
+
+# Runtime logs
+logs/
+
+# VS Code workspace settings
+.vscode/
