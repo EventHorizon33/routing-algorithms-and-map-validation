@@ -1,4 +1,5 @@
 import com.graphhopper.GraphHopper;
+import com.graphhopper.jackson.Jackson;
 import com.graphhopper.config.Profile;
 import com.graphhopper.routing.ev.BooleanEncodedValue;
 import com.graphhopper.routing.weighting.Weighting;
@@ -6,10 +7,12 @@ import com.graphhopper.storage.BaseGraph;
 import com.graphhopper.storage.index.LocationIndex;
 import com.graphhopper.storage.index.Snap;
 import com.graphhopper.util.CustomModel;
+import com.graphhopper.util.EdgeExplorer;
 import com.graphhopper.util.EdgeIterator;
-import com.graphhopper.util.GHUtility;
 import com.graphhopper.util.PMap;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -95,6 +98,9 @@ public class BellmanFordRouting {
 
         distance[source] = 0.0;
 
+        EdgeExplorer edgeExplorer =
+                graph.createEdgeExplorer();
+
         // Relax all edges V-1 times.
         for (int iteration = 0;
              iteration < nodeCount - 1;
@@ -111,8 +117,7 @@ public class BellmanFordRouting {
                 }
 
                 EdgeIterator edges =
-                        graph.createEdgeExplorer()
-                             .setBaseNode(node);
+                        edgeExplorer.setBaseNode(node);
 
                 while (edges.next()) {
 
@@ -169,7 +174,7 @@ public class BellmanFordRouting {
     // MAIN
     // ------------------------------------------------------------
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         System.out.println(
                 "Loading existing GraphHopper graph..."
@@ -190,10 +195,13 @@ public class BellmanFordRouting {
 
         hopper.setAllowWrites(false);
 
-        CustomModel carModel = GHUtility.loadCustomModelFromJar("car.json");
+        CustomModel carModel = Jackson.newObjectMapper().readValue(
+                new File("graphhopper/aarambh-car.json"),
+                CustomModel.class
+        );
 
         Profile carProfile = new Profile("car")
-                .putHint("custom_model_files", List.of("car.json"));
+                .putHint("custom_model_files", List.of("aarambh-car.json"));
 
         carProfile.getHints().remove("custom_model");
         carProfile.setCustomModel(carModel);
