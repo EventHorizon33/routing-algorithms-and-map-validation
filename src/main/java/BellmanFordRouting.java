@@ -14,6 +14,7 @@ import com.graphhopper.util.PMap;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.List;
 
 public class BellmanFordRouting {
@@ -101,20 +102,19 @@ public class BellmanFordRouting {
         EdgeExplorer edgeExplorer =
                 graph.createEdgeExplorer();
 
+        BitSet activeNodes = new BitSet(nodeCount);
+        activeNodes.set(source);
+
         // Relax all edges V-1 times.
         for (int iteration = 0;
              iteration < nodeCount - 1;
              iteration++) {
 
-            boolean changed = false;
+            BitSet nextActiveNodes = new BitSet(nodeCount);
 
-            for (int node = 0;
-                 node < nodeCount;
-                 node++) {
-
-                if (Double.isInfinite(distance[node])) {
-                    continue;
-                }
+            for (int node = activeNodes.nextSetBit(0);
+                 node >= 0;
+                 node = activeNodes.nextSetBit(node + 1)) {
 
                 EdgeIterator edges =
                         edgeExplorer.setBaseNode(node);
@@ -143,15 +143,17 @@ public class BellmanFordRouting {
                         distance[adjacentNode] =
                                 newDistance;
 
-                        changed = true;
+                        nextActiveNodes.set(adjacentNode);
                     }
                 }
             }
 
             // Already converged.
-            if (!changed) {
+            if (nextActiveNodes.isEmpty()) {
                 break;
             }
+
+            activeNodes = nextActiveNodes;
         }
 
         long elapsed =
