@@ -14,7 +14,6 @@ import com.graphhopper.util.CustomModel;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -129,8 +128,6 @@ public class DijkstraRouting {
         EdgeExplorer edgeExplorer =
                 graph.createEdgeExplorer();
 
-        BitSet settledNodes = new BitSet(nodeCount);
-
         while (!queue.isEmpty()) {
 
             NodeDistance current =
@@ -146,8 +143,6 @@ public class DijkstraRouting {
                 continue;
             }
 
-            settledNodes.set(node);
-
             // Target has been settled.
             if (node == target) {
                 break;
@@ -160,10 +155,6 @@ public class DijkstraRouting {
 
                 int adjacentNode =
                         edges.getAdjNode();
-
-                if (settledNodes.get(adjacentNode)) {
-                    continue;
-                }
 
                 double edgeWeight =
                         weighting.calcEdgeWeight(
