@@ -35,3 +35,52 @@ The optimization does not change the traversal order, outgoing edges, edge weigh
 The optimized run produced the same displayed route distance as the baseline.
 
 ### Result: Optimization 1 substantially reduced Bellman-Ford execution time while preserving the observed route result.
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+### Optimization 3: Reuse Frontier BitSets
+
+#### Change
+
+Reused the two `BitSet` frontier objects across Bellman-Ford relaxation passes instead of allocating a new `nextActiveNodes` `BitSet` on every pass.
+
+The implementation now:
+
+- Allocates `activeNodes` and `nextActiveNodes` once.
+- Clears `nextActiveNodes` at the beginning of each pass.
+- Swaps the two frontier references after a non-empty pass.
+- Preserves the existing frontier-based relaxation from Optimization 2.
+
+#### Why it should be faster
+
+The previous implementation allocated a new `BitSet` for every Bellman-Ford iteration. On longer searches, these repeated allocations can increase allocation and garbage-collection overhead.
+
+Reusing the two `BitSet` instances eliminates those per-pass allocations while preserving the same frontier contents and relaxation sequence.
+
+#### Correctness
+
+The optimization does not change the Bellman-Ford relaxation logic. `clear()` produces the same empty frontier state as a newly allocated `BitSet`, and the populated next frontier becomes the active frontier after each pass.
+
+Edge weighting, directed traversal, distance updates, source and target nodes, and early convergence behavior remain unchanged.
+
+#### Complexity
+
+- **Time:** remains worst-case `O(VE)`. The optimization reduces allocation and garbage-collection overhead rather than changing the asymptotic amount of relaxation work.
+- **Memory:** remains `O(V)`.
+- **Frontier allocation:** reduced from repeated per-pass allocation to two reusable `BitSet` objects.
+
+#### Result
+
+The optimized implementation produced the same route distance:
+
+**920.46 m (0.920 km)**
+
+Observed execution time:
+
+**238,572.687 ms ≈ 3.98 min**
+
+This was substantially faster than the 28:28 baseline and confirms that the third optimization runs successfully while preserving the observed result.
+
+> Note: this result is an observed single-run comparison, not a controlled multi-run benchmark.
