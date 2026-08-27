@@ -94,6 +94,19 @@ Optimization 2 therefore **did not improve runtime for this workload**. Both obs
 
 Optimization 2 was retained as a documented experimental result but is not considered a performance improvement for the selected workload.
 
-## Optimization 3
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-_To be added after implementation and verification._
+
+
+### Optimization 3: Distance-Dominance Pruning
+
+**Optimization #3:** Added distance-dominance pruning before GraphHopper edge-weight calculation.
+
+**Bottleneck addressed:** `weighting.calcEdgeWeight(...)` was being evaluated for outgoing edges even when the adjacent node already had a distance less than or equal to the current settled distance.
+
+**Change:** Before calculating an edge's weight, the implementation now checks:
+
+```java
+if (currentDistance >= distance[adjacentNode]) {
+    continue;
+}

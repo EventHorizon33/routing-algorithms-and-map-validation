@@ -156,6 +156,11 @@ public class DijkstraRouting {
                 int adjacentNode =
                         edges.getAdjNode();
 
+                if (currentDistance >=
+                        distance[adjacentNode]) {
+                    continue;
+                }
+
                 double edgeWeight =
                         weighting.calcEdgeWeight(
                                 edges,
