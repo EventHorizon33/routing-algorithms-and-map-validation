@@ -103,6 +103,7 @@ public class BellmanFordRouting {
                 graph.createEdgeExplorer();
 
         BitSet activeNodes = new BitSet(nodeCount);
+        BitSet nextActiveNodes = new BitSet(nodeCount);
         activeNodes.set(source);
 
         // Relax all edges V-1 times.
@@ -110,7 +111,7 @@ public class BellmanFordRouting {
              iteration < nodeCount - 1;
              iteration++) {
 
-            BitSet nextActiveNodes = new BitSet(nodeCount);
+            nextActiveNodes.clear();
 
             for (int node = activeNodes.nextSetBit(0);
                  node >= 0;
@@ -153,7 +154,9 @@ public class BellmanFordRouting {
                 break;
             }
 
+            BitSet previousActiveNodes = activeNodes;
             activeNodes = nextActiveNodes;
+            nextActiveNodes = previousActiveNodes;
         }
 
         long elapsed =
