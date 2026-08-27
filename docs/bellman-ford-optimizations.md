@@ -37,54 +37,50 @@ The optimized run produced the same displayed route distance as the baseline.
 ### Result: Optimization 1 substantially reduced Bellman-Ford execution time while preserving the observed route result.
 
 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+### Optimization 3: Reuse Frontier BitSets
 
-## Optimization 2: Frontier-Based Bellman-Ford Relaxation
+#### Change
 
-### Change
+Reused the two `BitSet` frontier objects across Bellman-Ford relaxation passes instead of allocating a new `nextActiveNodes` `BitSet` on every pass.
 
-Replaced the full-node scan on every Bellman-Ford relaxation pass with a frontier-based approach.
+The implementation now:
 
-The algorithm now tracks only nodes whose distances changed during the previous pass. These active nodes are processed in the next pass, and their improved neighbours are added to the next frontier.
+- Allocates `activeNodes` and `nextActiveNodes` once.
+- Clears `nextActiveNodes` at the beginning of each pass.
+- Swaps the two frontier references after a non-empty pass.
+- Preserves the existing frontier-based relaxation from Optimization 2.
 
-A `BitSet` is used to track the active and next-active nodes.
+#### Why it should be faster
 
-### Why this is faster
+The previous implementation allocated a new `BitSet` for every Bellman-Ford iteration. On longer searches, these repeated allocations can increase allocation and garbage-collection overhead.
 
-The previous implementation scanned every graph node on every relaxation pass, even when most node distances had not changed.
+Reusing the two `BitSet` instances eliminates those per-pass allocations while preserving the same frontier contents and relaxation sequence.
 
-The frontier-based approach avoids these unnecessary node scans and edge traversals by processing only nodes whose distances were improved in the previous pass.
+#### Correctness
 
-This is particularly beneficial for the large road graph used in this project, where the active search area is much smaller than the full graph.
+The optimization does not change the Bellman-Ford relaxation logic. `clear()` produces the same empty frontier state as a newly allocated `BitSet`, and the populated next frontier becomes the active frontier after each pass.
 
-### Correctness
+Edge weighting, directed traversal, distance updates, source and target nodes, and early convergence behavior remain unchanged.
 
-The implementation remains Bellman-Ford edge relaxation.
+#### Complexity
 
-Whenever a node's distance improves, its outgoing edges are scheduled for relaxation in the following pass. The existing distance calculation, edge weighting, relaxation rule, early-convergence behavior, and output format remain unchanged.
+- **Time:** remains worst-case `O(VE)`. The optimization reduces allocation and garbage-collection overhead rather than changing the asymptotic amount of relaxation work.
+- **Memory:** remains `O(V)`.
+- **Frontier allocation:** reduced from repeated per-pass allocation to two reusable `BitSet` objects.
 
-The optimized implementation therefore produced the same observed shortest-path distance as the previous implementation.
+#### Result
 
-### Complexity
+The optimized implementation produced the same route distance:
 
-- Previous implementation: `O(V(V + E))`, conventionally expressed as `O(VE)` for Bellman-Ford, with `O(V)` working memory.
-- Optimized implementation: worst-case `O(VE)`, while avoiding full `O(V)` node scans and unnecessary edge work when the active frontier is sparse.
-- Memory remains `O(V)`; the two frontier `BitSet`s add `O(V)` bits.
+**920.46 m (0.920 km)**
 
-### Benchmark
+Observed execution time:
 
-|    Version     |     Execution Time    | Distance |
-|----------------|----------------------:|---------:|
-|    Baseline    | 1,705,729 ms (28:28)  | 920.46 m |
-| Optimization 1 | 1,058,858 ms (17:40)  | 920.46 m |
-| Optimization 2 | 143,386.742 ms (2:23) | 920.46 m |
+**238,572.687 ms ≈ 3.98 min**
 
-**Observed improvement:** approximately **86.5% lower execution time than Optimization 1**, and approximately **91.6% lower execution time than the original baseline**.
+This was substantially faster than the 28:28 baseline and confirms that the third optimization runs successfully while preserving the observed result.
 
-The optimized run produced the same displayed route distance of **920.46 m**.
-
-### Result
-
-Optimization 2 substantially reduced Bellman-Ford execution time by eliminating repeated full-graph node scans and focusing relaxation work on the active frontier.
+> Note: this result is an observed single-run comparison, not a controlled multi-run benchmark.
