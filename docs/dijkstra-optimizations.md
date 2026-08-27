@@ -46,9 +46,53 @@ The priority-queue ordering, stale-entry handling, target termination, directed 
 - Working space: **O(V)**, unchanged.
 - `EdgeExplorer` allocations: reduced from repeated allocations to **O(1)**.
 
-## Optimization 2
 
-_To be added after implementation and verification._
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+## Optimization 2: Settled-Node Edge Pruning
+
+### Change
+
+Added a `BitSet` to track settled nodes during `runDijkstra()`.
+
+After a non-stale priority-queue entry is settled, edges whose destination node has already been settled are skipped before performing edge-weight calculation and relaxation.
+
+### Why it should be faster
+
+Dijkstra guarantees that once a node is settled, its shortest distance is final. Therefore, edges leading to already-settled nodes cannot produce a better distance.
+
+Skipping these edges avoids unnecessary GraphHopper edge-weight calculations and relaxation checks, particularly for back-edges in the bidirectional road graph.
+
+### Correctness
+
+Correctness was preserved. Dijkstra's non-negative-weight property guarantees that a settled node cannot later receive a shorter distance.
+
+The priority queue, stale-entry handling, target termination, directed traversal, edge weighting, distance calculation, and Optimization 1's reusable `EdgeExplorer` remain unchanged.
+
+### Complexity
+
+- Time: remains `O((V + E) log V)` in the worst case.
+- Working space: remains `O(V + E)` in the worst case.
+- The additional `BitSet` requires `O(V)` bits.
+- The optimization reduces edge-weight calculations in practice but does not change the asymptotic bound.
+
+### Result
+
+Distance remained unchanged at **920.46 m (0.920 km)**.
+
+Observed execution times:
+
+- Optimization 1: **32.981 ms**
+- Optimization 2, run 1: **61.269 ms**
+- Optimization 2, run 2: **49.023 ms**
+
+Optimization 2 therefore **did not improve runtime for this workload**. Both observed runs were slower than Optimization 1.
+
+### Conclusion
+
+Optimization 2 was retained as a documented experimental result but is not considered a performance improvement for the selected workload.
 
 ## Optimization 3
 
