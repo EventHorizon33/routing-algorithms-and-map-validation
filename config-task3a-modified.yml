@@ -1,0 +1,39 @@
+# GraphHopper 11.0 configuration isolated for the Task 3A modified-map run.
+graphhopper:
+  datareader.file: "C:/Users/user/OneDrive/Desktop/AARAMBH/data/task3a-area-modified.osm.pbf"
+  graph.location: "C:/Users/user/OneDrive/Desktop/AARAMBH/graph-cache-task3a-modified"
+
+  custom_models.directory: "C:/Users/user/OneDrive/Desktop/AARAMBH"
+  profiles:
+    - name: car
+      custom_model_files: [task3a-modified-car.json]
+  profiles_ch:
+    - profile: car
+  profiles_lm: []
+
+  graph.encoded_values: car_access, car_average_speed, road_access
+  prepare.min_network_size: 200
+  prepare.subnetworks.threads: 1
+  routing.snap_preventions_default: tunnel, bridge, ferry
+  routing.non_ch.max_waypoint_distance: 1000000
+  import.osm.ignored_highways: footway,construction,cycleway,path,steps
+  graph.dataaccess.default_type: RAM_STORE
+
+server:
+  application_connectors:
+    - type: http
+      port: 8993
+      bind_host: localhost
+      max_request_header_size: 50k
+  request_log:
+    appenders: []
+  admin_connectors:
+    - type: http
+      port: 8994
+      bind_host: localhost
+
+logging:
+  appenders:
+    - type: console
+      time_zone: UTC
+      log_format: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"
