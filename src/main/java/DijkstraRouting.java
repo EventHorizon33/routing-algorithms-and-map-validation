@@ -6,6 +6,7 @@ import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.storage.BaseGraph;
 import com.graphhopper.storage.index.LocationIndex;
 import com.graphhopper.storage.index.Snap;
+import com.graphhopper.util.EdgeExplorer;
 import com.graphhopper.util.EdgeIterator;
 import com.graphhopper.util.PMap;
 import com.graphhopper.util.CustomModel;
@@ -124,6 +125,9 @@ public class DijkstraRouting {
                 new NodeDistance(source, 0.0)
         );
 
+        EdgeExplorer edgeExplorer =
+                graph.createEdgeExplorer();
+
         while (!queue.isEmpty()) {
 
             NodeDistance current =
@@ -145,8 +149,7 @@ public class DijkstraRouting {
             }
 
             EdgeIterator edges =
-                    graph.createEdgeExplorer()
-                         .setBaseNode(node);
+                    edgeExplorer.setBaseNode(node);
 
             while (edges.next()) {
 
